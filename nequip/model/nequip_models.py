@@ -153,6 +153,7 @@ def FullNequIPGNNEnergyModel(
     convnet_nonlinearity_type: str = "gate",
     convnet_nonlinearity_scalars: Dict[int, Callable] = {"e": "silu", "o": "tanh"},
     convnet_nonlinearity_gates: Dict[int, Callable] = {"e": "silu", "o": "tanh"},
+    std_out: int = -1,
 ) -> GraphModel:
     """NequIP GNN model that predicts energies based on a more extensive set of arguments."""
     # === sanity checks and warnings ===
@@ -293,7 +294,7 @@ def FullNequIPGNNEnergyModel(
     modules.update({"total_energy_sum": total_energy_sum})
 
     # === assemble in SequentialGraphNetwork ===
-    return SequentialGraphNetwork(modules)
+    return SequentialGraphNetwork(modules, num_layers=num_layers, std_out=std_out)
 
 
 @model_builder

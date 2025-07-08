@@ -139,6 +139,8 @@ class SequentialGraphNetwork(GraphModuleMixin, torch.nn.Sequential):
     def __init__(
         self,
         modules: Union[Sequence[GraphModuleMixin], Dict[str, GraphModuleMixin]],
+        num_layers: int,
+        std_out: int = -1,
     ):
         if isinstance(modules, dict):
             module_list = list(modules.values())
@@ -160,6 +162,8 @@ class SequentialGraphNetwork(GraphModuleMixin, torch.nn.Sequential):
         else:
             modules = OrderedDict((f"module{i}", m) for i, m in enumerate(module_list))
         super().__init__(modules)
+
+        self.std_out_block = num_layers+std_out
 
     @torch.jit.unused
     def append(self, name: str, module: GraphModuleMixin) -> None:
@@ -235,6 +239,8 @@ class SequentialGraphNetwork(GraphModuleMixin, torch.nn.Sequential):
     # Copied from https://pytorch.org/docs/stable/_modules/torch/nn/modules/container.html#Sequential
     # with type annotations added
     def forward(self, input: AtomicDataDict.Type) -> AtomicDataDict.Type:
-        for module in self:
+        for i, module in enumerate(self):
             input = module(input)
-        return input
+            if i == self.std_out_block:
+                std_head_input = input
+        return input, std_head_input
